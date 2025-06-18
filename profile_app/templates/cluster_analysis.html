@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block title %}聚类分析总览 - 管理员{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<style>
+.performance-card {
+    transition: all 0.3s ease;
+    /* cursor: pointer; */ /* Optional: if you want to indicate it's clickable for future features */
+}
+.performance-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.metric-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+.chart-container-wrapper {
+    border: 1px solid #e9ecef;
+    border-radius: .375rem; /* Bootstrap default border-radius */
+    padding: 1rem;
+    background-color: #fff;
+}
+.chart-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #343a40;
+}
+.chart-description {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+.insight-item {
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: flex-start;
+}
+.insight-item:last-child {
+    border-bottom: none;
+}
+.insight-icon {
+    margin-right: 10px;
+    font-size: 1.1rem;
+    margin-top: 2px;
+}
+
+.insight-type-warning .insight-icon { color: #ffc107; } /* Bootstrap warning */
+.insight-type-info .insight-icon { color: #0dcaf0; }    /* Bootstrap info */
+.insight-type-success .insight-icon { color: #198754; } /* Bootstrap success */
+
+.insight-text {
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.action-buttons .btn {
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row mb-3 align-items-center">
+        <div class="col-md-7">
+            <h2 class="mb-0">学习者聚类分析总览</h2>
+        </div>
+        <div class="col-md-5 text-md-end action-buttons mt-2 mt-md-0">
+            <a href="{% url 'profile_app:run_cluster_analysis' %}" class="btn btn-info btn-sm me-2">
+                <i class="bi bi-arrow-clockwise"></i> 重新运行分析
+            </a> 
+            <a href="{% url 'profile_app:index' %}" class="btn btn-secondary btn-sm">
+                <i class="bi bi-arrow-left-circle"></i> 返回学生列表
+            </a>
+        </div>
+    </div>
+
+    {% if latest_model %}
+        <div class="alert alert-light alert-dismissible fade show small py-2" role="alert">
+            <i class="bi bi-info-circle me-1"></i> 当前模型训练于: <strong>{{ latest_model.train_time|date:"Y-m-d H:i:s" }}</strong>
+            {% if latest_model.parameters %} (参数: <small>{{ latest_model.parameters }}</small>){% endif %}
+            <button type="button" class="btn-close btn-sm py-2" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% else %}
+        <div class="alert alert-info small py-2" role="alert">
+            <i class="bi bi-exclamation-triangle me-1"></i> 尚未进行过模型训练。
+        </div>
+    {% endif %}
+
+    {% if cluster_stats and cluster_stats.total_students > 0 %}
+        {# --- 关键指标卡片 --- #}
+        <div class="row g-3">
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card text-center shadow-sm performance-card h-100">
+                    <div class="card-body d-flex flex-column justify-content-center">
+                        <h6 class="card-title text-muted fw-normal">总学生数</h6>
+                        <p class="metric-value mb-0">{{ cluster_stats.total_students }}</p>
+                        <small class="text-muted mt-1">参与分析的学生总数。</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card text-center shadow-sm performance-card h-100">
+                    <div class="card-body d-flex flex-column justify-content-center">
+                        <h6 class="card-title text-muted fw-normal">平均综合得分</h6>
+                        <p class="metric-value mb-0">{{ avg_score|default_if_none:"N/A"|floatformat:1 }}</p>
+                        <small class="text-muted mt-1">整体综合表现平均。</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card text-center shadow-sm performance-card h-100">
+                    <div class="card-body d-flex flex-column justify-content-center">
+                        <h6 class="card-title text-muted fw-normal">平均积极性</h6>
+                        <p class="metric-value mb-0">{{ engagement_score|default_if_none:"N/A"|floatformat:1 }}</p>
+                        <small class="text-muted mt-1">学习投入程度均值。</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-3">
+                 <div class="card text-center shadow-sm performance-card h-100">
+                    <div class="card-body d-flex flex-column justify-content-center">
+                        <h6 class="card-title text-muted fw-normal">优秀率</h6>
+                        <p class="metric-value mb-0">{{ excellent_rate|default_if_none:0|floatformat:1 }}%</p>
+                        <small class="text-muted mt-1">综合得分&ge;90分占比。</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# --- 图表与建议区域 --- #}
+        <div class="row mt-3 g-4">
+            {# 左侧图表列 #}
+            <div class="col-lg-7">
+                <div class="row g-4">
+                    {# 学习表现分布柱状图 #}
+                    <div class="col-12">
+                        <div class="chart-container-wrapper shadow-sm">
+                            <h5 class="chart-title">学习表现评级分布</h5>
+                            <p class="chart-description">各评级（优秀、良好、中等、待提高）的学生人数分布，反映班级整体成绩构成。</p>
+                            {% if performance_distribution_data and performance_distribution_data.values|length > 0 %}
+                            <div id="performanceDistributionChart" style="width: 100%; height: 320px;"></div>
+                            {{ performance_distribution_data|json_script:"performance-distribution-data-json" }}
+                            {% else %}
+                            <div class="alert alert-light small py-2"><i class="bi bi-bar-chart-line"></i> 评级分布数据不足或无法生成图表。</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {# 知识-态度维度散点图 #}
+                    <div class="col-12">
+                         <div class="chart-container-wrapper shadow-sm">
+                            <h5 class="chart-title">知识-态度维度散点图</h5>
+                            <p class="chart-description">每点代表一名学生在知识和态度维度上的表现，颜色区分综合评级，助您识别不同特征的学生群体。</p>
+                            {% if scatter_data and scatter_data|length > 0 %}
+                            <div id="scatterPlot" style="width: 100%; height: 320px;"></div>
+                            {{ scatter_data|json_script:"scatter-data-json" }}
+                            {% else %}
+                            <div class="alert alert-light small py-2"><i class="bi bi-bullseye"></i> 散点图数据不足或无法生成图表。</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# 右侧图表与建议列 #}
+            <div class="col-lg-5">
+                <div class="row g-4">
+                    {# 班级多维度能力对比图 (分组柱状图) #}
+                    <div class="col-12">
+                        <div class="chart-container-wrapper shadow-sm">
+                            <h5 class="chart-title">核心能力对比 (班级 vs. 优秀)</h5>
+                            <p class="chart-description">对比班级平均与优秀学生在知识、态度、兴趣三维度上的得分，识别整体优势与提升点。</p>
+                            {% if multi_dimension_comparison_data and multi_dimension_comparison_data.series.0.data|length > 0 %}
+                            <div id="multiDimensionComparisonChart" style="width: 100%; height: 300px;"></div>
+                            {{ multi_dimension_comparison_data|json_script:"multi-dimension-comparison-data-json" }}
+                            {% else %}
+                            <div class="alert alert-light small py-2"><i class="bi bi-layout-three-columns"></i> 能力对比数据不足或无法生成图表。</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {# 行动建议 #}
+                    <div class="col-12">
+                        <div class="chart-container-wrapper shadow-sm" style="max-height: 380px; overflow-y: auto;">
+                            <h5 class="chart-title"><i class="bi bi-lightbulb me-1"></i> 教学与管理洞察</h5>
+                             {% if actionable_insights %}
+                                <ul class="list-unstyled mb-0">
+                                    {% for insight in actionable_insights %}
+                                    <li class="insight-item insight-type-{{ insight.type }}">
+                                        <span class="insight-icon">
+                                            {% if insight.type == 'warning' %}<i class="bi bi-exclamation-triangle-fill"></i>
+                                            {% elif insight.type == 'info' %}<i class="bi bi-info-circle-fill"></i>
+                                            {% elif insight.type == 'success' %}<i class="bi bi-check-circle-fill"></i>
+                                            {% else %}<i class="bi bi-dot"></i>
+                                            {% endif %}
+                                        </span>
+                                        <span class="insight-text">{{ insight.text }}</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted small mb-0 py-2"><i class="bi bi-journals"></i> 暂无明确的行动建议，或系统未生成相关提示。</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="alert alert-warning mt-4 py-3" role="alert">
+            <h4 class="alert-heading"><i class="bi bi-exclamation-diamond-fill me-2"></i> 暂无聚类分析数据!</h4>
+            <p class="mb-1">系统中当前没有足够的学生数据或尚未运行聚类分析。</p>
+            <hr class="my-2">
+            <p class="mb-0 small">
+                请先 <a href="{% url 'profile_app:data_input' %}" class="alert-link fw-bold">录入更多学生数据</a> 然后 <a href="{% url 'profile_app:run_cluster_analysis' %}" class="alert-link fw-bold">运行聚类分析程序</a>。
+            </p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Helper to initialize charts
+    function initChart(elementId, option, noDataId = null) {
+        var chartDom = document.getElementById(elementId);
+        var noDataDom = noDataId ? document.getElementById(noDataId) : null;
+
+        if (chartDom) {
+            try {
+                 // Basic check if data for chart actually exists before init
+                if (option && option.series && option.series.length > 0 && 
+                    (option.series[0].data && option.series[0].data.length > 0 || option.series[0].values && option.series[0].values.length > 0 ) || 
+                    (option.dataset && option.dataset.source && option.dataset.source.length > 1) || // For dataset method
+                    (elementId === 'performanceDistributionChart' && option.series[0].data && option.series[0].data.some(val => val > 0)) // Special check for distribution if all are zero
+                   ) {
+                    if(noDataDom) noDataDom.style.display = 'none'; // Hide no data message if chart is to be shown
+                    var myChart = echarts.init(chartDom);
+                    myChart.setOption(option);
+                    window.addEventListener('resize', function() {
+                        myChart.resize();
+                    });
+                } else {
+                    // console.warn("No data for chart: " + elementId, option);
+                    if(noDataDom) noDataDom.style.display = 'block'; // Show no data message
+                    chartDom.style.display = 'none'; // Hide chart container
+                }
+            } catch (e) {
+                console.error("Error initializing chart: " + elementId, e);
+                if(noDataDom) noDataDom.style.display = 'block';
+                chartDom.style.display = 'none';
+            }
+        } else {
+            // console.warn(elementId + " element not found for ECharts.");
+        }
+    }
+
+    // 1. 学习表现分布柱状图
+    const performanceDataEl = document.getElementById('performance-distribution-data-json');
+    if (performanceDataEl) {
+        try {
+            const performanceData = JSON.parse(performanceDataEl.textContent);
+            const performanceOption = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    formatter: '{b}: {c} 人'
+                },
+                grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
+                xAxis: {
+                    type: 'category',
+                    data: performanceData.categories,
+                    axisLabel: { interval: 0, rotate: 0, color: '#333' },
+                    axisTick: { alignWithLabel: true }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '学生人数',
+                    nameTextStyle: { color: '#333', padding: [0, 0, 0, 30] },
+                    axisLabel: { color: '#333' }
+                },
+                series: [{
+                    name: '学生人数',
+                    type: 'bar',
+                    data: performanceData.values,
+                    barMaxWidth: 50,
+                    itemStyle: {
+                        color: function(params) {
+                            var colorList = ['#28a745', '#17a2b8', '#ffc107', '#dc3545']; // 优秀(绿), 良好(蓝), 中等(黄), 待提高(红)
+                            return colorList[params.dataIndex % colorList.length];
+                        },
+                        borderRadius: [3, 3, 0, 0]
+                    },
+                    label: { show: true, position: 'top', color: '#333' }
+                }]
+            };
+            // Pass ID of the no-data div if available
+            initChart('performanceDistributionChart', performanceOption);
+        } catch (e) { console.error("Error parsing performance data or setting up chart: ", e); }
+    }
+
+    // 2. 知识-态度维度散点图
+    const scatterDataEl = document.getElementById('scatter-data-json');
+    if (scatterDataEl) {
+        try {
+            const scatterDataValues = JSON.parse(scatterDataEl.textContent);
+            const scatterOption = {
+                grid: { left: '8%', right: '12%', bottom: '15%', top: '10%', containLabel: true },
+                xAxis: { name: '知识维度得分', nameLocation: 'middle', nameGap: 30, scale: true, min: 0, max: 100, nameTextStyle: { color: '#333'}, axisLabel: {color: '#333'} },
+                yAxis: { name: '学习态度得分', nameLocation: 'middle', nameGap: 40, scale: true, min: 0, max: 100, nameTextStyle: { color: '#333'}, axisLabel: {color: '#333'} },
+                series: [{
+                    type: 'scatter',
+                    data: scatterDataValues, // expects [knowledge, attitude, rating_name, rating_index, student_id]
+                    symbolSize: 11,
+                    itemStyle: {
+                        color: function (params) {
+                             // rating_index (params.data[3]) is 0:优秀, 1:良好, 2:中等, 3:待提高
+                            const colors = ['#28a745', '#17a2b8', '#ffc107', '#dc3545']; 
+                            return colors[params.data[3]]; 
+                        }
+                    }
+                }],
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function (params) {
+                        if (!params.data) return ''
+                        return `学生ID: ${params.data[4] || 'N/A'}<br/>知识得分: ${params.data[0]}<br/>态度得分: ${params.data[1]}<br/>评级: ${params.data[2]}`;
+                    }
+                },
+                legend: {
+                    show: true,
+                    data: [
+                        { name: '优秀', itemStyle: { color: '#28a745' } },
+                        { name: '良好', itemStyle: { color: '#17a2b8' } },
+                        { name: '中等', itemStyle: { color: '#ffc107' } },
+                        { name: '待提高', itemStyle: { color: '#dc3545' } }
+                    ],
+                    orient: 'horizontal',
+                    bottom: 0,
+                    textStyle: { color: '#333' }
+                },
+                darkMode: false // ensure light mode for consistency
+            };
+            initChart('scatterPlot', scatterOption);
+        } catch (e) { console.error("Error parsing scatter data or setting up chart: ", e); }
+    }
+
+    // 3. 班级多维度能力对比图 (分组柱状图)
+    const multiDimensionDataEl = document.getElementById('multi-dimension-comparison-data-json');
+    if (multiDimensionDataEl) {
+        try {
+            const multiDimensionData = JSON.parse(multiDimensionDataEl.textContent);
+            const multiDimensionOption = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    formatter: function (params) {
+                        let tooltipText = params[0].axisValueLabel || params[0].axisValue;
+                        params.forEach(function (item) {
+                            tooltipText += `<br/>${item.marker}${item.seriesName}: ${item.value != null ? item.value.toFixed(1) : 'N/A'} 分`;
+                        });
+                        return tooltipText;
+                    }
+                },
+                legend: { 
+                    data: (multiDimensionData.series || []).map(s => s.name),
+                    top: 5,
+                    textStyle: { color: '#333' }
+                },
+                grid: { left: '3%', right: '4%', bottom: '3%', top: '18%', containLabel: true },
+                xAxis: {
+                    type: 'category',
+                    data: multiDimensionData.categories,
+                    axisLabel: { interval: 0, rotate: 0, color: '#333' }
+                },
+                yAxis: { 
+                    type: 'value', 
+                    name: '平均分数', 
+                    min: 0, 
+                    max: 100, 
+                    nameTextStyle: { color: '#333', padding: [0, 0, 0, 30] }, 
+                    axisLabel: {color: '#333'} 
+                },
+                series: (multiDimensionData.series || []).map(s => ({
+                    ...s, 
+                    barGap: '10%', // Gap between bars of different categories
+                    barCategoryGap: '25%', // Gap between bars of the same category
+                    barMaxWidth: 40,
+                    itemStyle: {
+                        borderRadius: [3, 3, 0, 0]
+                    }
+                }))
+            };
+            initChart('multiDimensionComparisonChart', multiDimensionOption);
+        } catch (e) { console.error("Error parsing multi-dimension data or setting up chart: ", e); }
+    }
+});
+</script>
+{% endblock %} 

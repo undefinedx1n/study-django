@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}管理员控制台 - 学习者画像系统{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="display-6 text-primary me-3">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div>
+                            <h1 class="h2 mb-0">欢迎回来，{{ user.userprofile.name|default:user.username }}</h1>
+                            <p class="text-muted mb-0">学习者画像系统管理员控制台</p>
+                        </div>
+                    </div>
+                    <p class="fs-5 mb-0">今天是 {% now "Y年m月d日 l" %}，祝您工作顺利！</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- 学生总数卡片 -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">学生总数</h5>
+                        <div class="rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: #f0f4f8;">
+                            <span class="fw-bold" style="color: #0d6efd; font-size: 1.25rem;">👥</span>
+                        </div>
+                    </div>
+                    <h2 class="display-5 mb-0">{{ student_count }}</h2>
+                    <p class="text-muted small">已录入系统的学生数量</p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <a href="{% url 'profile_app:index' %}" class="btn btn-sm btn-outline-primary">查看全部学生</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 已分析数据卡片 -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">已分析数据</h5>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-2">
+                            <i class="fas fa-chart-line text-success"></i>
+                        </div>
+                    </div>
+                    <h2 class="display-5 mb-0">{{ analyzed_count }}</h2>
+                    <p class="text-muted small">已生成学习画像的记录数</p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <a href="{% url 'profile_app:index' %}" class="btn btn-sm btn-outline-success">查看分析结果</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 待分析数据卡片 -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">待分析数据</h5>
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-2">
+                            <i class="fas fa-exclamation-circle text-warning"></i>
+                        </div>
+                    </div>
+                    <h2 class="display-5 mb-0">{{ pending_analysis_count }}</h2>
+                    <p class="text-muted small">有学习记录但待分析的学生</p>
+                    
+                    {% if pending_analysis_details and pending_analysis_details.records %}
+                    <div class="mt-2 small">
+                        <p class="text-muted mb-1 small">待分析记录示例 ({{ pending_analysis_details.sample_count }}/{{ pending_analysis_details.total }})</p>
+                        <ul class="list-unstyled mb-0">
+                            {% for record in pending_analysis_details.records %}
+                            <li class="text-truncate small">
+                                <i class="fas fa-user-graduate text-muted me-1"></i>
+                                {{ record.user.userprofile.name|default:record.user.username }}
+                                <span class="badge bg-light text-dark">{{ record.create_time|date:"m-d" }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <a href="{% url 'profile_app:run_cluster_analysis' %}" class="btn btn-sm btn-outline-warning">
+                        <i class="fas fa-play-circle me-1"></i>执行分析
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 待录入数据学生卡片 -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">待录入数据学生</h5>
+                        <div class="rounded-circle bg-info bg-opacity-10 p-2">
+                            <i class="fas fa-user-plus text-info"></i>
+                        </div>
+                    </div>
+                    <h2 class="display-5 mb-0">{{ students_pending_data_input_count }}</h2>
+                    <p class="text-muted small">已注册但尚无学习记录</p>
+                    
+                    {% if students_pending_data_input_details and students_pending_data_input_details.users %}
+                    <div class="mt-2 small">
+                        <p class="text-muted mb-1 small">待录入学生示例 ({{ students_pending_data_input_details.sample_count }}/{{ students_pending_data_input_details.total }})</p>
+                        <ul class="list-unstyled mb-0">
+                            {% for user_obj in students_pending_data_input_details.users %}
+                            <li class="text-truncate small">
+                                <i class="fas fa-user text-muted me-1"></i>
+                                {{ user_obj.userprofile.name|default:user_obj.username }}
+                                <span class="badge bg-light text-dark">{{ user_obj.date_joined|date:"m-d" }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <a href="{% url 'profile_app:data_input' %}" class="btn btn-sm btn-outline-info">
+                        <i class="fas fa-edit me-1"></i>前往数据录入
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 快速操作区域 -->
+    <div class="row mt-4 mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">快速操作</h4>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-3 col-sm-6">
+            <a href="{% url 'profile_app:data_input' %}" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm hover-card">
+                    <div class="card-body text-center p-4">
+                        <div class="rounded-circle p-3 mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; background-color: #f0f4f8;">
+                            <span class="fw-bold" style="color: #0d6efd; font-size: 1.75rem;">📋</span>
+                        </div>
+                        <h5 class="card-title">数据录入</h5>
+                        <p class="text-muted">添加新的学生记录</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-3 col-sm-6">
+            <a href="{% url 'profile_app:index' %}" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm hover-card">
+                    <div class="card-body text-center p-4">
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3 mx-auto mb-3" style="width: 60px; height: 60px;">
+                            <i class="fas fa-user-graduate fs-3 text-success"></i>
+                        </div>
+                        <h5 class="card-title">学生列表</h5>
+                        <p class="text-muted">查看和管理学生信息</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-3 col-sm-6">
+            <a href="{% url 'profile_app:cluster_analysis' %}" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm hover-card">
+                    <div class="card-body text-center p-4">
+                        <div class="rounded-circle bg-info bg-opacity-10 p-3 mx-auto mb-3" style="width: 60px; height: 60px;">
+                            <i class="fas fa-chart-pie fs-3 text-info"></i>
+                        </div>
+                        <h5 class="card-title">聚类分析</h5>
+                        <p class="text-muted">查看学习类型分析</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-3 col-sm-6">
+            <a href="{% url 'admin:index' %}" class="text-decoration-none" target="_blank">
+                <div class="card h-100 border-0 shadow-sm hover-card">
+                    <div class="card-body text-center p-4">
+                        <div class="rounded-circle bg-secondary bg-opacity-10 p-3 mx-auto mb-3" style="width: 60px; height: 60px;">
+                            <i class="fas fa-cogs fs-3 text-secondary"></i>
+                        </div>
+                        <h5 class="card-title">系统管理</h5>
+                        <p class="text-muted">Django管理员界面</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <div class="d-flex">
+                    <div class="me-3">
+                        <i class="fas fa-info-circle fa-2x"></i>
+                    </div>
+                    <div>
+                        <h5 class="alert-heading">使用提示</h5>
+                        <p>通过"数据录入"添加新的学生记录，然后在"聚类分析"中执行数据分析以生成学习者画像。</p>
+                        <p class="mb-0">查看"学生列表"可以访问每个学生的详细信息和学习画像结果。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+</style>
+{% endblock %} 

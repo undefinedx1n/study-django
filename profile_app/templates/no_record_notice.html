@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}提示 - 无学习记录{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title text-warning"><i class="fas fa-exclamation-triangle me-2"></i>无法查看学习画像</h4>
+            <p class="card-text">学生 <strong>{{ student_name|default:"该用户" }}</strong> (用户名: <strong>{{ username|default:"未知" }}</strong>) 暂无已录入的学习记录或生成的学习画像数据。</p>
+            <hr>
+            <p class="card-text mb-0">请先为该学生 <a href="{% url 'profile_app:data_input' %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-plus-circle me-1"></i>录入学习数据</a>，之后再尝试查看其学习画像。</p>
+        </div>
+        <div class="card-footer text-center">
+            <a href="{% url 'profile_app:index' %}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>返回学生列表</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

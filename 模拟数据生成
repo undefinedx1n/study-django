@@ -1,0 +1,89 @@
+# 模拟数据生成命令参考
+
+## 基本命令格式
+```
+python manage.py generate_test_data <数量> [选项]
+```
+
+## 常用命令
+```
+python manage.py generate_test_data 250 --distribution realistic --time-patterns --special-patterns
+```
+使用realistic分布更符合实际教育场景中的学生分布
+启用time-patterns模拟学习进步/退步的时间变化特征
+启用special-patterns模拟特殊学习行为模式
+这三个因素结合能最大程度模拟真实学习者的多样性
+
+## 参数说明
+
+### 必选参数
+- `<数量>` - 要生成的学生记录数量
+
+### 可选参数
+- `--distribution [类型]` - 设置学生成绩分布类型
+  - `realistic` (默认) - 真实分布 (优秀:15%, 良好:25%, 中等:35%, 较低:15%, 待提高:10%)
+  - `normal` - 正态分布 (优秀:10%, 良好:20%, 中等:40%, 较低:20%, 待提高:10%)
+  - `uniform` - 均匀分布 (各20%)
+  - `skewed` - 偏斜分布 (中等比例更高)
+  - `clustered` - 聚类分布 (优秀比例更高)
+- `--time-patterns` - 启用时间变化模式，模拟学习进步/退步的时间变化特征
+- `--special-patterns` - 启用特殊学习行为模式，如考试导向型、作业忽视型等
+- `--keep-existing` - 保留现有数据，在不删除现有数据的情况下添加新数据
+- `--clear-all-data` - 清空所有数据(包括管理员账户在内的所有用户、记录和日志)
+- `--password [密码]` - 为所有生成的学生账户设置统一密码，默认为"123456"
+
+## 使用示例
+
+### 基础测试 - 生成200条真实分布的数据
+```
+python manage.py generate_test_data 200
+```
+
+### 启用时间模式 - 生成包含学习进步/退步模式的数据
+```
+python manage.py generate_test_data 200 --time-patterns
+```
+
+### 启用特殊行为模式 - 生成包含特殊学习行为的数据
+```
+python manage.py generate_test_data 200 --special-patterns
+```
+
+### 完整测试 - 同时启用时间模式和特殊行为模式
+```
+python manage.py generate_test_data 200 --time-patterns --special-patterns
+```
+
+### 清空所有现有数据并生成新数据
+```
+python manage.py generate_test_data 200 --clear-all-data
+```
+
+### 保留现有数据 - 在不删除现有数据的情况下添加新数据
+```
+python manage.py generate_test_data 100 --keep-existing
+```
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'django_db',         # 数据库名
+        'USER': 'root',              # 用户名
+        'PASSWORD': 'hjx123456..', # 修改为你的 MySQL 密码
+        'HOST': '8.148.206.210',     # 数据库主机地址
+        'PORT': '3307',              # 端口（MySQL8使用的端口）
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        }
+    }
+}
+### 设置自定义密码 - 为所有生成的学生账户设置指定密码
+```
+python manage.py generate_test_data 200 --password student2023
+```
+
+## 数据导出
+
+生成的学生账户信息会自动导出到工作目录下的`student_accounts.csv`文件中，包含用户名、密码、姓名、学号、性别和类型等信息。
+
+# 测试聚类性能 - 生成数据后立即执行聚类分析并评估性能
+python manage.py generate_test_data 200 --time-patterns --special-patterns --test-clustering

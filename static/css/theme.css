@@ -1,0 +1,210 @@
+/* 学习者画像系统 - 主题配色 */
+
+:root {
+  --primary-color-rgb: 26, 188, 156; /* 新的主色调 (Teal) RGB格式 */
+  
+  /* 高亮颜色 */
+  --highlight-soft: rgba(var(--primary-color-rgb), 0.08);
+  --highlight-medium: rgba(var(--primary-color-rgb), 0.15);
+  --highlight-strong: rgba(var(--primary-color-rgb), 0.25);
+  
+  /* 简化的亮/暗模式切换变量 */
+  --bg-color: #ffffff;
+  --text-color: #212529;
+  --border-color: #dee2e6;
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.125);
+  --input-bg: #ffffff;
+  --input-border: #ced4da;
+  --navbar-bg: var(--primary-color);
+  --navbar-color: #ffffff;
+  
+  /* 辅助函数 */
+  --transition-fast: all 0.15s ease-in-out;
+  --transition-normal: all 0.3s ease-in-out;
+  --transition-slow: all 0.5s ease-in-out;
+}
+
+/* 简化暗黑模式 - 通用覆盖 */
+body.dark-mode {
+  --bg-color: #1a1a1a;
+  --text-color: #e0e0e0;
+  --border-color: #444444;
+  --card-bg: #2c2c2c;
+  --card-border: #555555;
+  --input-bg: #333333;
+  --input-border: #555555;
+  --navbar-bg: #2c3e50;
+  --navbar-color: #ffffff;
+}
+
+/* 
+ * 预定义的颜色主题
+ * 通过给body添加类名可以轻松切换主题
+ */
+
+/* 青色主题（默认主题） */
+body, body.theme-teal {
+  --primary-color: #1ABC9C;    /* 清新青色 */
+  --primary-light: #48D1B0;   /* 青色的亮色 */
+  --primary-dark: #16A085;    /* 青色的暗色 */
+  --accent-color: #F39C12;    /* 温暖的橙色作为点缀 */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: var(--primary-dark);
+}
+
+/* 蓝色主题 */
+body.theme-blue {
+  --primary-color: #3498DB;    /* Peter River */
+  --primary-light: #5DADE2;   
+  --primary-dark: #2980B9;    
+  --accent-color: #E74C3C;    /* Alizarin */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: var(--primary-dark);
+}
+
+/* 紫色主题 */
+body.theme-purple {
+  --primary-color: #9B59B6;    /* Amethyst */
+  --primary-light: #BB8FCE;   
+  --primary-dark: #8E44AD;    
+  --accent-color: #2ECC71;    /* Emerald */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: var(--primary-dark);
+}
+
+/* 红色主题 */
+body.theme-red {
+  --primary-color: #E74C3C;    /* Alizarin */
+  --primary-light: #EC7063;   
+  --primary-dark: #CB4335;    
+  --accent-color: #F1C40F;    /* Sun Flower */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: var(--primary-dark);
+}
+
+/* 灰色主题 */
+body.theme-gray {
+  --primary-color: #7F8C8D;    /* Asbestos */
+  --primary-light: #95A5A6;   
+  --primary-dark: #616A6B;    
+  --accent-color: #3498DB;    /* Peter River */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: var(--primary-dark);
+}
+
+/* 绿色主题 */
+body.theme-green {
+  --primary-color: #28a745;
+  --primary-light: #48c76a;
+  --primary-dark: #1e7e34;
+  --accent-color: #17a2b8;
+}
+
+/* 橙色主题 */
+body.theme-orange {
+  --primary-color: #fd7e14;
+  --primary-light: #ff9843;
+  --primary-dark: #dc6502;
+  --accent-color: #20c997;
+}
+
+/* Default Theme: Teal (Light) */
+body, body.theme-teal {
+  --primary-color: #1ABC9C; /* Teal */
+  --primary-color-rgb: 26, 188, 156;
+  --secondary-color: #7F8C8D; /* Asbestos */
+  --accent-color: #F39C12; /* Orange */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: #159a7d;
+}
+
+/* Teal Dark Theme */
+body.dark-mode.theme-teal {
+  --primary-color: #20c997; /* Brighter Teal for dark mode */
+  --primary-color-rgb: 32, 201, 151;
+  --secondary-color: #95a5a6; /* Lighter Asbestos */
+  --accent-color: #f5b041; /* Brighter Orange */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: #1baa80;
+}
+
+/* Blue Theme (Light) */
+body.theme-blue {
+  --primary-color: #3498DB; /* Peter River */
+  --primary-color-rgb: 52, 152, 219;
+  --secondary-color: #95A5A6; /* Concrete */
+  --accent-color: #E74C3C; /* Alizarin */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: #287db9;
+}
+
+/* Blue Dark Theme */
+body.dark-mode.theme-blue {
+  --primary-color: #5dade2; /* Lighter Peter River */
+  --primary-color-rgb: 93, 173, 226;
+  --secondary-color: #bdc3c7; /* Lighter Concrete */
+  --accent-color: #ec7063; /* Lighter Alizarin */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: #4a90e2;
+}
+
+/* Purple Theme (Light) */
+body.theme-purple {
+  --primary-color: #9B59B6; /* Amethyst */
+  --primary-color-rgb: 155, 89, 182;
+  --secondary-color: #BDC3C7; /* Silver */
+  --accent-color: #2ECC71; /* Emerald */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: #80439c;
+}
+
+/* Purple Dark Theme */
+body.dark-mode.theme-purple {
+  --primary-color: #af7ac5; /* Lighter Amethyst */
+  --primary-color-rgb: 175, 122, 197;
+  --secondary-color: #cacfd2; /* Lighter Silver */
+  --accent-color: #58d68d; /* Lighter Emerald */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: #9b59b6;
+}
+
+/* Red Theme (Light) - Kept for consistency, though primary use is Teal */
+body.theme-red {
+  --primary-color: #E74C3C; /* Alizarin */
+  --primary-color-rgb: 231, 76, 60;
+  --secondary-color: #ECF0F1; /* Clouds */
+  --accent-color: #F1C40F; /* Sun Flower */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: #c23a2b;
+}
+
+/* Red Dark Theme */
+body.dark-mode.theme-red {
+  --primary-color: #ec7063; /* Lighter Alizarin */
+  --primary-color-rgb: 236, 112, 99;
+  --secondary-color: #f2f2f2; /* Very light grey for contrast */
+  --accent-color: #f4d03f; /* Lighter Sun Flower */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: #e74c3c;
+}
+
+/* Gray Theme (Light) */
+body.theme-gray {
+  --primary-color: #7F8C8D; /* Asbestos */
+  --primary-color-rgb: 127, 140, 141;
+  --secondary-color: #BDC3C7; /* Silver */
+  --accent-color: #3498DB; /* Peter River */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: #687374;
+}
+
+/* Gray Dark Theme */
+body.dark-mode.theme-gray {
+  --primary-color: #95a5a6; /* Lighter Asbestos */
+  --primary-color-rgb: 149, 165, 166;
+  --secondary-color: #cacfd2; /* Lighter Silver */
+  --accent-color: #5dade2; /* Lighter Peter River */
+  --bs-link-color: var(--primary-color);
+  --bs-link-hover-color: #7f8c8d;
+} 

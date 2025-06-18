@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+{% load form_tags %}
+
+{% block title %}我的学习画像 - {{ user_profile.name|default:request.user.username }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .dimension-card {
+        margin-bottom: 1.5rem;
+        border-radius: .75rem;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.1);
+    }
+    .dimension-card .card-header {
+        background-color: var(--primary-color);
+        color: #ffffff;
+        font-weight: bold;
+        border-bottom: 1px solid #dee2e6;
+        border-top-left-radius: .75rem;
+        border-top-right-radius: .75rem;
+    }
+    .recommendation-list li {
+        margin-bottom: 0.75rem;
+        padding: 0.5rem;
+        border-left: 3px solid var(--primary-color);
+        background-color: #f8f9fa; 
+    }
+    .score-badge {
+        font-size: 1.1rem;
+        padding: .3em .6em;
+    }
+    .nav-pills .nav-link.active {
+        background-color: var(--primary-color);
+        color: #ffffff !important;
+    }
+    .nav-pills .nav-link {
+        color: var(--primary-color);
+    }
+    
+    /* 修复暗黑模式下的文字颜色问题 */
+    body.dark-mode .badge.score-badge.bg-warning {
+        color: #000 !important;  /* 确保警告标签在暗黑模式下使用黑色文字 */
+    }
+    
+    body.dark-mode .list-group-item {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+    
+    body.dark-mode .text-muted {
+        color: #a0a0a0 !important; /* 暗黑模式下更亮的灰色文本 */
+    }
+    
+    body.dark-mode .recommendation-list li {
+        background-color: rgba(248, 249, 250, 0.05);
+    }
+    
+    body.dark-mode .progress {
+        background-color: #444;
+    }
+    
+    /* 确保在暗黑模式下表格行文本可见 */
+    body.dark-mode .table tbody tr {
+        color: var(--text-color);
+    }
+</style>
+{# Pass data to JavaScript, similar to result_radar.html #}
+{{ radar_data|json_script:"radar-data-json" }}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="mb-0">我的学习画像</h2>
+            <p class="text-muted">欢迎您，{{ record.user.userprofile.name|default:record.user.username }} ！在这里了解您的学习表现和个性化建议。</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            {# Optional: Link to print/download report if feature exists #}
+            {# <a href="#" class="btn btn-outline-primary btn-sm">下载报告</a> #}
+        </div>
+    </div>
+
+    <!-- Nav Pills for Tabs -->
+    <ul class="nav nav-pills mb-4 justify-content-center" id="profileTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="pill" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">画像总览</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="details-tab" data-bs-toggle="pill" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="false">详细解读</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="recommendations-tab" data-bs-toggle="pill" data-bs-target="#recommendations" type="button" role="tab" aria-controls="recommendations" aria-selected="false">个性化建议</button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="profileTabsContent">
+        <!-- Overview Tab -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+            <div class="row">
+                <div class="col-lg-7 mb-4">
+                    <div class="card dimension-card h-100">
+                        <div class="card-header">核心能力雷达图</div>
+                        <div class="card-body d-flex justify-content-center align-items-center" style="min-height: 350px;">
+                            <canvas id="radarChartStudent"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5 mb-4">
+                    <div class="card dimension-card h-100">
+                        <div class="card-header">综合表现与评级</div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <h4>总评分: <span class="badge score-badge bg-primary">{{ cluster_result.final_score|floatformat:1 }}</span></h4>
+                                <h5>评级: <span class="badge score-badge 
+                                    {% if cluster_result.rating == '优秀' %}bg-success
+                                    {% elif cluster_result.rating == '良好' %}bg-info
+                                    {% elif cluster_result.rating == '中等' %}bg-warning text-dark
+                                    {% else %}bg-danger{% endif %}
+                                ">{{ cluster_result.rating }}</span></h5>
+                            </div>
+                            <p class="text-muted">{{ score_interpretations.final_score }}</p>
+                            <hr>
+                            <h6 class="mb-3">各维度贡献度:</h6>
+                            {% for key, value in score_contributions.items %}
+                                <div class="mb-2">
+                                    <span>
+                                        {% if key == 'knowledge_skill' %}知识与技能
+                                        {% elif key == 'learning_attitude' %}学习态度
+                                        {% elif key == 'course_interest' %}课程兴趣
+                                        {% else %}{{ key|capfirst }}{% endif %}
+                                    </span>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ value|floatformat:1 }}%;" aria-valuenow="{{ value|floatformat:1 }}" aria-valuemin="0" aria-valuemax="100">{{ value|floatformat:1 }}%</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Details Tab -->
+        <div class="tab-pane fade" id="details" role="tabpanel" aria-labelledby="details-tab">
+            <div class="row">
+                 <div class="col-md-12">
+                    <div class="card dimension-card">
+                        <div class="card-header">各维度得分详情</div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                {% for key, value in radar_data.items %}
+                                    {% if key != 'final_score' %} {# Final score is already in overview #}
+                                    <li class="list-group-item">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">
+                                                {% if key == 'knowledge_skill' %}知识与技能
+                                                {% elif key == 'learning_attitude' %}学习态度
+                                                {% elif key == 'course_interest' %}课程兴趣
+                                                {% else %}{{ key|capfirst }}{% endif %}
+                                            </h5>
+                                            <span class="badge 
+                                                {% if value >= 85 %}bg-success
+                                                {% elif value >= 70 %}bg-info
+                                                {% elif value >= 60 %}bg-warning text-dark
+                                                {% else %}bg-danger{% endif %}
+                                            ">{{ value|floatformat:1 }} 分</span>
+                                        </div>
+                                        <small class="text-muted d-block mt-1">
+                                            {% if key == 'knowledge_skill' %}{{ score_interpretations.knowledge_skill }}
+                                            {% elif key == 'learning_attitude' %}{{ score_interpretations.learning_attitude }}
+                                            {% elif key == 'course_interest' %}{{ score_interpretations.course_interest }}
+                                            {% endif %}
+                                        </small>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="card dimension-card">
+                        <div class="card-header">学习数据</div>
+                        <div class="card-body">
+                            <p class="small text-muted">以下是用于生成您学习画像的部分数据，供您参考了解：</p>
+                            <ul>
+                                <li>作业平均成绩: {{ student_record.homework_score|floatformat:1 }} 分</li>
+                                <li>实训通过率: {{ student_record.training_pass_rate|multiply:100|floatformat:1 }}%</li>
+                                <li>测验完成率: {{ student_record.test_completion_rate|multiply:100|floatformat:1 }}%</li>
+                                <li>签到得分: {{ student_record.sign_in_score|floatformat:1 }} 分</li>
+                                <li>作业完成率(按时): {{ student_record.homework_completion_rate|multiply:100|floatformat:1 }}%</li>
+                                <li>视频观看率: {{ student_record.video_watch_rate|multiply:100|floatformat:1 }}%</li>
+                                <li>测验完成次数: {{ student_record.test_completion_count }} 次</li>
+                                <li>作业提交次数: {{ student_record.homework_completion_count }} 次</li>
+                                <li>课程互动得分: {{ student_record.course_interaction_score|floatformat:1 }} 分</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations Tab -->
+        <div class="tab-pane fade" id="recommendations" role="tabpanel" aria-labelledby="recommendations-tab">
+             <div class="card dimension-card">
+                <div class="card-header">个性化学习建议</div>
+                <div class="card-body">
+                    {% if recommendations %}
+                        <p class="lead">根据您的学习画像，我们为您提供以下建议：</p>
+                        <ul class="list-unstyled recommendation-list mt-3">
+                        {% for category, text in recommendations.items %}
+                            <li>
+                                <strong>
+                                {% if category == 'homework' %}作业提升
+                                {% elif category == 'training' %}实训加强
+                                {% elif category == 'test' %}测验巩固
+                                {% elif category == 'attendance' %}出勤与规律
+                                {% elif category == 'homework_completion' %}作业习惯
+                                {% elif category == 'video_watch' %}视频学习
+                                {% elif category == 'interaction' %}课堂互动
+                                {% elif category == 'participation' %}课程参与
+                                {% else %}{{ category|capfirst }}{% endif %}
+                                :</strong> {{ text }}
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-check-circle-fill text-success mb-3" viewBox="0 0 16 16">
+                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                            </svg>
+                            <h4>太棒了！</h4>
+                            <p>目前来看，您的各项学习指标均表现良好，暂无特别的提升建议。请继续保持！</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const radarDataJsonElement = document.getElementById('radar-data-json');
+    if (!radarDataJsonElement) {
+        console.error('Radar data JSON script element not found.');
+        return;
+    }
+    const radarDataJsonText = radarDataJsonElement.textContent;
+    if (!radarDataJsonText) {
+        console.error('Radar data JSON script element is empty.');
+        return;
+    }
+    let radarData;
+    try {
+        radarData = JSON.parse(radarDataJsonText);
+    } catch (e) {
+        console.error('Error parsing radar data JSON:', e);
+        return;
+    }
+
+    const ctxStudent = document.getElementById('radarChartStudent');
+    if (!ctxStudent) {
+        console.error('Canvas element for student radar chart not found.');
+        return;
+    }
+    const radarCtxStudent = ctxStudent.getContext('2d');
+
+    const labels = Object.keys(radarData).map(key => {
+        const labelMap = {
+            'knowledge_skill': '知识技能',
+            'learning_attitude': '学习态度',
+            'course_interest': '课程兴趣',
+            'final_score': '综合表现' // Although usually not on radar, mapping it for consistency
+        };
+        return labelMap[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    });
+
+    // Filter out final_score from radar display if it exists and is not desired
+    const radarDisplayData = { ...radarData };
+    // delete radarDisplayData.final_score; // Uncomment if final_score should not be on the radar
+    
+    const dataValues = Object.values(radarDisplayData);
+    const displayLabels = Object.keys(radarDisplayData).map(key => {
+         const labelMap = {
+            'knowledge_skill': '知识技能',
+            'learning_attitude': '学习态度',
+            'course_interest': '课程兴趣',
+            'final_score': '综合表现' 
+        };
+        return labelMap[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    });
+
+
+    new Chart(radarCtxStudent, {
+        type: 'radar',
+        data: {
+            labels: displayLabels, // Use filtered labels
+            datasets: [{
+                label: '我的表现 ({{ user_profile.name|default:request.user.username }})',
+                data: dataValues, // Use filtered data values
+                fill: true,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgb(255, 99, 132)',
+                pointBackgroundColor: 'rgb(255, 99, 132)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgb(255, 99, 132)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                r: {
+                    angleLines: { display: true }, // Display angle lines for better readability
+                    suggestedMin: 0,
+                    suggestedMax: 100,
+                    ticks: {
+                        stepSize: 20 // Adjust step size for radar scale
+                    },
+                    pointLabels: {
+                        font: {
+                            size: 13 // Adjust font size of point labels
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.r !== null) {
+                                label += context.parsed.r.toFixed(1) + ' 分';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

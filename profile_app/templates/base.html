@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}学习者画像系统{% endblock %}</title>
+    <!-- 使用最新版Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6  -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- jQuery库 -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <!-- Chart.js 和 ECharts 数据可视化库 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    
+    <!-- Select2 for django-autocomplete-light -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <!-- 自定义样式表 -->
+    {% load static %}
+    <link href="{% static 'css/theme.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/style.css' %}" rel="stylesheet" />
+    
+    <!-- Select2 国际化 -->
+    <script>
+    // 自定义Select2中文本地化
+    (function($) {
+        $.fn.select2.defaults.set('language', {
+            errorLoading: function() {
+                return '无法加载结果';
+            },
+            inputTooLong: function(args) {
+                var overChars = args.input.length - args.maximum;
+                return '请删除' + overChars + '个字符';
+            },
+            inputTooShort: function(args) {
+                var remainingChars = args.minimum - args.input.length;
+                return '请至少输入' + remainingChars + '个字符';
+            },
+            loadingMore: function() {
+                return '加载更多结果…';
+            },
+            maximumSelected: function(args) {
+                return '最多只能选择' + args.maximum + '个项目';
+            },
+            noResults: function() {
+                return '未找到匹配结果';
+            },
+            searching: function() {
+                return '搜索中…';
+            },
+            removeAllItems: function() {
+                return '移除所有项目';
+            }
+        });
+    })(jQuery);
+    </script>
+    
+    {% block extrahead %}{% endblock %}
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="theme-blue">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" >
+                <i class="fas fa-graduation-cap me-2"></i>学习者画像系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {% if user.is_authenticated %}
+                        {% if user.is_staff %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/admin/dashboard/' in request.path %}active{% endif %}" href="{% url 'admin_dashboard' %}">
+                                    <i class="fas fa-tachometer-alt me-1"></i>控制台
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.path == '/profile_app/' or request.path == '/profile_app/index/' %}active{% endif %}" href="{% url 'profile_app:index' %}">
+                                    <i class="fas fa-users me-1"></i>学生列表
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/data_input/' in request.path %}active{% endif %}" href="{% url 'profile_app:data_input' %}">
+                                    <i class="fas fa-file-import me-1"></i>数据录入
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/cluster_analysis/' in request.path %}active{% endif %}" href="{% url 'profile_app:cluster_analysis' %}">
+                                    <i class="fas fa-chart-pie me-1"></i>聚类分析
+                                </a>
+                            </li>
+                  
+                            
+                        {% elif user.userprofile.role == 'student' %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/student_dashboard/' in request.path %}active{% endif %}" href="{% url 'profile_app:student_dashboard' %}">
+                                    <i class="fas fa-user-graduate me-1"></i>我的学习画像
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'profile_app:login' %}">首页</a>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'profile_app:login' %}">
+                                <i class="fas fa-home me-1"></i>系统首页
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <!-- Theme Switcher Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="themeSwitcherButton" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="切换主题">
+                            <i id="currentThemeIcon" class="fas fa-palette me-1"></i>
+                            <span class="d-none d-lg-inline">主题</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="themeSwitcherButton" id="themeSwitcherDropdown">
+                            <!-- JS 将动态填充主题选项和暗黑模式切换 -->
+                        </ul>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-1"></i>
+                                {{ user.userprofile.name|default:user.username }}
+                                <span class="badge bg-light text-dark ms-1">
+                                {% if user.is_staff %}管理员{% elif user.userprofile.role == 'student' %}学生{% else %}用户{% endif %}
+                                </span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdownMenuLink">
+                                <li><a class="dropdown-item" href="{% url 'profile_app:password_change' %}">
+                                    <i class="fas fa-key me-2"></i>修改密码
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{% url 'profile_app:logout' %}" method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="fas fa-sign-out-alt me-2"></i>登出
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                       
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'profile_app:login' %}">
+                                <i class="fas fa-sign-in-alt me-1"></i>登录
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'profile_app:student_signup' %}">
+                                <i class="fas fa-user-plus me-1"></i>学生注册
+                            </a>
+                        </li>
+                        <!-- <li class="nav-item">
+                            <a class="nav-link" href="{% url 'profile_app:signup' %}">
+                                <i class="fas fa-user-shield me-1"></i>管理员注册
+                            </a>
+                        </li> -->
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="py-4 bg-white mt-auto border-top">
+        <div class="container">
+            <div class="d-flex align-items-center justify-content-between small">
+                <div class="text-muted">© {% now "Y" %} 学习者画像系统</div>
+                <div>
+                    <a href="#" class="text-decoration-none text-muted me-3">隐私政策</a>
+                    <a href="#" class="text-decoration-none text-muted">使用条款</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% load static %}
+    <script src="{% static 'js/theme-switcher.js' %}"></script>
+    {% block extrajs %}{% endblock %}
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

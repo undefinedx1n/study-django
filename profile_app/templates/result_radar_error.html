@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}画像分析错误 - {{ record.user.userprofile.name|default:record.user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h3>画像分析错误：{{ record.user.userprofile.name|default:record.user.username }}</h3>
+        </div>
+        <div class="col text-end">
+            <a href="{% url 'profile_app:index' %}" class="btn btn-secondary">返回总览</a>
+        </div>
+    </div>
+
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">数据缺失</h4>
+        <p>{{ error_message }}</p>
+        <hr>
+        <p class="mb-0">请确保该学生的数据已正确录入，并且学习者聚类分析已成功运行。您可以尝试 <a href="{% url 'profile_app:run_cluster_analysis' %}" class="alert-link">重新运行聚类分析</a>。</p>
+    </div>
+
+    {% if record %}
+    <div class="card mt-4">
+        <div class="card-header">学生基本信息</div>
+        <div class="card-body">
+            <p><strong>学生记录ID:</strong> {{ record.id }}</p>
+            <p><strong>关联用户名:</strong> {{ record.user.username }}</p>
+            {% if record.user.userprofile %}
+            <p><strong>姓名:</strong> {{ record.user.userprofile.name|default:"未提供" }}</p>
+            <p><strong>性别:</strong> {{ record.user.userprofile.get_gender_display|default:"未提供" }}</p>
+            {% endif %}
+            <p><strong>记录创建时间:</strong> {{ record.create_time|date:"Y-m-d H:i:s" }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %} 

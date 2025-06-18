@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}学生仪表盘{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">欢迎您，{{ student_name }}！</h3>
+                </div>
+                <div class="card-body text-center">
+                    <h4 class="card-title">您的专属学习画像仪表盘</h4>
+                    <p class="lead">这里将很快展示您详细的学习画像分析结果、个性化建议和更多精彩内容。</p>
+                    <div class="my-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-bar-chart-line-fill text-success" viewBox="0 0 16 16">
+                            <path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1V2z"/>
+                        </svg>
+                    </div>
+                    <p>我们正在努力为您准备最好的体验，敬请期待！</p>
+                    <a href="{% url 'profile_app:logout' %}" class="btn btn-outline-secondary mt-3">安全登出</a>
+                </div>
+                <div class="card-footer text-muted text-center">
+                    学习者画像系统 - 助力您的个性化学习之旅
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

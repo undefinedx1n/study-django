@@ -1,0 +1,61 @@
+{% extends "base.html" %} {# 假设您有一个基础模板 base.html #}
+
+{% block title %}用户登录{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card mt-5">
+            <div class="card-header">
+                <h2 class="card-title text-center">用户登录</h2>
+            </div>
+            <div class="card-body">
+                {% if form.errors and not form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        用户名或密码错误，请重试。
+                    </div>
+                {% endif %}
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.help_text %}
+                                <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">登录</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <p class="mb-0"><a href="{% url 'profile_app:student_signup' %}">还没有账户？点击注册</a></p>
+                {# <p><a href="#">忘记密码?</a></p> #} {# Placeholder for future password reset #}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load form_tags %}
+
+{% block title %}学生画像 - {{ record.user.userprofile.name|default:record.user.username }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .dimension-card {
+        margin-bottom: 1.5rem;
+    }
+    .recommendation-list li {
+        margin-bottom: 0.5rem;
+    }
+</style>
+{{ radar_data|json_script:"radar-data-json" }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h3>{{ record.user.userprofile.name|default:record.user.username }} 同学的学习画像详情</h3>
+        </div>
+        <div class="col text-end">
+            <a href="{% url 'profile_app:index' %}" class="btn btn-secondary">返回总览</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card dimension-card">
+                <div class="card-header">雷达图</div>
+                <div class="card-body">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card dimension-card">
+                <div class="card-header">得分详情与解读</div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for key, value in radar_data.items %}
+                        <li class="list-group-item">
+                            {% if key == 'knowledge_skill' %}
+                                <strong>知识技能</strong>: {{ value|floatformat:2 }} 分
+                                <small class="d-block text-muted">{{ score_interpretations.knowledge_skill }}</small>
+                            {% elif key == 'learning_attitude' %}
+                                <strong>学习态度</strong>: {{ value|floatformat:2 }} 分
+                                <small class="d-block text-muted">{{ score_interpretations.learning_attitude }}</small>
+                            {% elif key == 'course_interest' %}
+                                <strong>课程兴趣</strong>: {{ value|floatformat:2 }} 分
+                                <small class="d-block text-muted">{{ score_interpretations.course_interest }}</small>
+                            {% elif key == 'final_score' %}
+                                <strong>综合表现</strong>: {{ value|floatformat:2 }} 分
+                                <small class="d-block text-muted">{{ score_interpretations.final_score }}</small>
+                            {% else %}
+                                <strong>{{ key }}</strong>: {{ value|floatformat:2 }} 分 {# Fallback for any other keys #}
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <!-- 删除各维度贡献度卡片 -->
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">个性化建议</div>
+                <div class="card-body">
+                    {% if recommendations %}
+                        <ul class="recommendation-list">
+                        {% for category, text in recommendations.items %}
+                            <li>
+                                <strong>
+                                {% if category == 'homework' %}作业质量
+                                {% elif category == 'training' %}实训练习
+                                {% elif category == 'test' %}测验完成
+                                {% elif category == 'attendance' %}课程出勤
+                                {% elif category == 'homework_completion' %}作业完成
+                                {% elif category == 'video_watch' %}视频学习
+                                {% elif category == 'interaction' %}课程互动
+                                {% elif category == 'participation' %}课程参与
+                                {% else %}{{ category|capfirst }}
+                                {% endif %}
+                                :</strong> {{ text }}
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>暂无特别建议，整体表现良好。</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const radarDataJson = JSON.parse(document.getElementById('radar-data-json').textContent);
+    const ctx = document.getElementById('radarChart').getContext('2d');
+    const labels = Object.keys(radarDataJson).map(key => {
+        const labelMap = {
+            'knowledge_skill': '知识技能',
+            'learning_attitude': '学习态度',
+            'course_interest': '课程兴趣',
+            'final_score': '综合表现'
+        };
+        return labelMap[key] || key;
+    });
+    const dataValues = Object.values(radarDataJson);
+
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '{{ record.user.userprofile.name|default:record.user.username }} 表现',
+                data: dataValues,
+                fill: true,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgb(54, 162, 235)',
+                pointBackgroundColor: 'rgb(54, 162, 235)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgb(54, 162, 235)'
+            }]
+        },
+        options: {
+            elements: {
+                line: {
+                    borderWidth: 3
+                }
+            },
+            scales: {
+                r: {
+                    angleLines: { display: false },
+                    suggestedMin: 0,
+                    suggestedMax: 100
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

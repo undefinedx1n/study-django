@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}编辑学生记录 - {{ student_name }}{% endblock %}
+
+{% block extrahead %}
+<style>
+    /* Styles copied and adapted from data_input.html */
+    .input-group-text.percent {
+        background-color: #e9ecef;
+        border-left: none;
+    }
+    .rate-input {
+        border-right: none;
+        text-align: left;
+    }
+    .score-input, .counter-input {
+        text-align: left;
+    }
+    .form-control {
+        text-align: left;
+    }
+    .card {
+        transition: all 0.3s ease;
+        margin-bottom: 1rem !important; 
+    }
+    .card:hover {
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1) !important;
+    }
+    .card-header {
+        font-weight: 600;
+        padding: 0.6rem 1rem;
+    }
+    .card-body {
+        padding: 1rem;
+    }
+    .form-control, .input-group {
+        font-size: 0.9rem;
+    }
+    .col-form-label { 
+        font-size: 0.9rem;
+        padding-top: calc(0.375rem + 1px);
+        padding-bottom: calc(0.375rem + 1px);
+        font-weight: normal; /* Ensuring labels are not bold unless specified by fw-bold */
+    }
+    .form-text {
+        margin-top: 0.15rem;
+        font-size: 0.75rem;
+    }
+    .mb-3 {
+        margin-bottom: 0.75rem !important;
+    }
+    .user-info-panel {
+        background-color: #f8f9fa; 
+        border: 1px solid #e9ecef; 
+        border-radius: 0.3rem; 
+        padding: 1rem; 
+        margin-bottom: 1.5rem; 
+    }
+    .user-info-panel h4 {
+        margin-top: 0;
+        margin-bottom: 0.75rem;
+        color: #343a40; 
+        font-size: 1.1rem; 
+    }
+    .user-info-panel p {
+        margin-bottom: 0.3rem; 
+        color: #5a6268; 
+        font-size: 0.9rem;
+    }
+    .user-info-panel strong {
+        color: #212529; 
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h3><i class="fas fa-user-edit me-2"></i>编辑学生学习记录</h3>
+        </div>
+    </div>
+
+    <div class="user-info-panel card shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title"><i class="fas fa-user-circle me-2"></i>学生信息</h4>
+            <p><strong>姓名:</strong> {{ student_name }}</p>
+            <p><strong>用户名:</strong> {{ record.user.username }}</p>
+            {% if record.user.userprofile.student_id %}
+            <p><strong>学号:</strong> {{ record.user.userprofile.student_id }}</p>
+            {% endif %}
+            <p><strong>性别:</strong> {{ record.user.userprofile.get_gender_display }}</p>
+            <p><strong>记录ID:</strong> {{ record.id }}</p>
+        </div>
+    </div>
+
+    <form method="post" class="needs-validation" novalidate id="editStudentRecordForm">
+        {% csrf_token %}
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-light py-2">
+                <h6 class="mb-0"><i class="fas fa-book-reader me-2"></i>学习表现数据</h6>
+            </div>
+                        <div class="card-body">                {% for field in form %}                    {% if field.name == "user" %}                        <input type="hidden" name="{{ field.html_name }}" id="{{ field.id_for_label }}" value="{{ field.value|default:record.user.id }}">                    {% endif %}                {% endfor %}                <div class="row g-3">                    <div class="col-md-6">                        <div class="mb-3 row">                            <label for="id_homework_score" class="col-sm-4 col-form-label">作业成绩</label>                            <div class="col-sm-8">                                <input type="number" name="homework_score" id="id_homework_score"                                     class="form-control score-input {% if form.homework_score.errors %}is-invalid{% endif %}"                                     min="0" max="100" step="0.1" value="{{ form.homework_score.value|default_if_none:'' }}" required>                                {% if form.homework_score.errors %}                                <div class="invalid-feedback d-block">                                    {% for error in form.homework_score.errors %}{{ error }}{% endfor %}                                </div>                                {% endif %}                            </div>                        </div>                    </div>                    <div class="col-md-6">                        <div class="mb-3 row">                            <label for="id_sign_in_score" class="col-sm-4 col-form-label">出勤得分</label>                            <div class="col-sm-8">                                <input type="number" name="sign_in_score" id="id_sign_in_score"                                     class="form-control score-input {% if form.sign_in_score.errors %}is-invalid{% endif %}"                                     min="0" max="100" step="0.1" value="{{ form.sign_in_score.value|default_if_none:'' }}" required>                                {% if form.sign_in_score.errors %}                                <div class="invalid-feedback d-block">                                    {% for error in form.sign_in_score.errors %}{{ error }}{% endfor %}                                </div>                                {% endif %}                            </div>                        </div>                    </div>                    <div class="col-md-6">                        <div class="mb-3 row">                            <label for="id_course_interaction_score" class="col-sm-4 col-form-label">互动得分</label>                            <div class="col-sm-8">                                <input type="number" name="course_interaction_score" id="id_course_interaction_score"                                     class="form-control score-input {% if form.course_interaction_score.errors %}is-invalid{% endif %}"                                     min="0" max="100" step="0.1" value="{{ form.course_interaction_score.value|default_if_none:'' }}" required>                                {% if form.course_interaction_score.errors %}                                <div class="invalid-feedback d-block">                                    {% for error in form.course_interaction_score.errors %}{{ error }}{% endfor %}                                </div>                                {% endif %}                            </div>                        </div>                    </div>                </div>                                <hr class="my-2">                                <div class="row g-3">                    <div class="col-md-6">                        <div class="mb-3 row">                            <label for="id_homework_completion_rate_percent" class="col-sm-4 col-form-label">作业完成率</label>                            <div class="col-sm-8">                                <div class="input-group">                                    <input type="number" name="homework_completion_rate_percent" id="id_homework_completion_rate_percent"                                         class="form-control rate-input {% if form.homework_completion_rate_percent.errors %}is-invalid{% endif %}"                                         min="0" max="100" value="{{ form.homework_completion_rate_percent.value|default_if_none:'' }}" required>                                    <span class="input-group-text percent">%</span>                                    {% if form.homework_completion_rate_percent.errors %}                                    <div class="invalid-feedback d-block">                                        {% for error in form.homework_completion_rate_percent.errors %}{{ error }}{% endfor %}                                    </div>                                    {% endif %}                                </div>                            </div>                        </div>                    </div>                    <div class="col-md-6">                        <div class="mb-3 row">                            <label for="id_test_completion_rate_percent" class="col-sm-4 col-form-label">测验完成率</label>                            <div class="col-sm-8">                                <div class="input-group">                                    <input type="number" name="test_completion_rate_percent" id="id_test_completion_rate_percent"                                         class="form-control rate-input {% if form.test_completion_rate_percent.errors %}is-invalid{% endif %}"                                         min="0" max="100" value="{{ form.test_completion_rate_percent.value|default_if_none:'' }}" required>                                    <span class="input-group-text percent">%</span>                                    {% if form.test_completion_rate_percent.errors %}                                    <div class="invalid-feedback d-block">                                        {% for error in form.test_completion_rate_percent.errors %}{{ error }}{% endfor %}                                    </div>                                    {% endif %}                                </div>                            </div>                        </div>                    </div>                                        <div class="col-md-6">                        <div class="mb-3 row">                            <label for="id_video_watch_rate_percent" class="col-sm-4 col-form-label">视频观看率</label>                            <div class="col-sm-8">                                <div class="input-group">                                    <input type="number" name="video_watch_rate_percent" id="id_video_watch_rate_percent"                                         class="form-control rate-input {% if form.video_watch_rate_percent.errors %}is-invalid{% endif %}"                                         min="0" max="100" value="{{ form.video_watch_rate_percent.value|default_if_none:'' }}" required>                                    <span class="input-group-text percent">%</span>                                    {% if form.video_watch_rate_percent.errors %}                                    <div class="invalid-feedback d-block">                                        {% for error in form.video_watch_rate_percent.errors %}{{ error }}{% endfor %}                                    </div>                                    {% endif %}                                </div>                            </div>                        </div>                    </div>                    <div class="col-md-6">                        <div class="mb-3 row">                            <label for="id_training_pass_rate_percent" class="col-sm-4 col-form-label">实训通过率</label>                            <div class="col-sm-8">                                <div class="input-group">                                    <input type="number" name="training_pass_rate_percent" id="id_training_pass_rate_percent"                                         class="form-control rate-input {% if form.training_pass_rate_percent.errors %}is-invalid{% endif %}"                                         min="0" max="100" value="{{ form.training_pass_rate_percent.value|default_if_none:'' }}" required>                                    <span class="input-group-text percent">%</span>                                    {% if form.training_pass_rate_percent.errors %}                                    <div class="invalid-feedback d-block">                                        {% for error in form.training_pass_rate_percent.errors %}{{ error }}{% endfor %}                                    </div>                                    {% endif %}                                </div>                            </div>                        </div>                    </div>                                        <div class="col-md-6">                        <div class="mb-3 row">                            <label for="id_homework_completion_count" class="col-sm-4 col-form-label">作业完成次数</label>                            <div class="col-sm-8">                                <input type="number" name="homework_completion_count" id="id_homework_completion_count"                                     class="form-control counter-input {% if form.homework_completion_count.errors %}is-invalid{% endif %}"                                     min="0" max="20" value="{{ form.homework_completion_count.value|default_if_none:'' }}" required>                                {% if form.homework_completion_count.errors %}                                <div class="invalid-feedback d-block">                                    {% for error in form.homework_completion_count.errors %}{{ error }}{% endfor %}                                </div>                                {% endif %}                            </div>                        </div>                    </div>                    <div class="col-md-6">                        <div class="mb-3 row">                            <label for="id_test_completion_count" class="col-sm-4 col-form-label">测验完成次数</label>                            <div class="col-sm-8">                                <input type="number" name="test_completion_count" id="id_test_completion_count"                                     class="form-control counter-input {% if form.test_completion_count.errors %}is-invalid{% endif %}"                                     min="0" max="10" value="{{ form.test_completion_count.value|default_if_none:'' }}" required>                                {% if form.test_completion_count.errors %}                                <div class="invalid-feedback d-block">                                    {% for error in form.test_completion_count.errors %}{{ error }}{% endfor %}                                </div>                                {% endif %}                            </div>                        </div>                    </div>                </div>            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-12 text-center">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="fas fa-save me-2"></i>保存更改
+                </button>
+                <a href="{% url 'profile_app:index' %}" class="btn btn-secondary ms-2 px-3">
+                    <i class="fas fa-times me-1"></i>取消
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block extrajs %}
+{# JavaScript for validation remains largely the same as previous version #}
+{# It targets .rate-input, .score-input, .counter-input classes which are now manually applied #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function setupInputValidation(selector, options) {
+            const inputs = document.querySelectorAll(selector);
+            inputs.forEach(input => {
+                if (options.tooltipTitle) {
+                     new bootstrap.Tooltip(input, {
+                        title: options.tooltipTitle(input),
+                        placement: 'top',
+                        trigger: 'focus'
+                    });
+                }
+                if (options.initialFormat && input.value && !isNaN(parseFloat(input.value))) { // Check if value is a number
+                    input.value = options.initialFormat(input.value);
+                }
+                input.addEventListener('input', function() {
+                    if(options.regexReplace) {
+                        this.value = this.value.replace(options.regexReplace, '');
+                    }
+                    if(options.maxLength && this.value.length > options.maxLength) {
+                         this.value = this.value.substring(0, options.maxLength);
+                    }
+                    if(options.formatOnInput) {
+                        this.value = options.formatOnInput(this.value);
+                    }
+                    if(options.validator) {
+                        options.validator(this);
+                    }
+                });
+                if (options.formatOnBlur) {
+                    input.addEventListener('blur', function() {
+                        if (this.value && !isNaN(parseFloat(this.value))) { // Check if value is a number
+                           this.value = options.formatOnBlur(this.value);
+                        }
+                         if(options.validator) { 
+                            options.validator(this);
+                        }
+                    });
+                }
+            });
+        }
+        
+        function showEditValidationMessage(element, message) {
+            hideEditValidationMessage(element);
+            element.classList.add('is-invalid');
+            const messageElement = document.createElement('div');
+            messageElement.className = 'invalid-feedback validation-message d-block';
+            messageElement.textContent = message;
+            const parentGroup = element.closest('.input-group');
+            if (parentGroup) {
+                parentGroup.parentNode.insertBefore(messageElement, parentGroup.nextSibling);
+            } else {
+                 element.parentNode.insertBefore(messageElement, element.nextSibling);
+            }
+        }
+
+        function hideEditValidationMessage(element) {
+            element.classList.remove('is-invalid');
+            const nextSibling = (element.closest('.input-group') || element).nextElementSibling;
+            if (nextSibling && nextSibling.classList.contains('validation-message')) {
+                nextSibling.remove();
+            }
+             // Also check for messages directly after the input if not in a group
+            const directSibling = element.nextElementSibling;
+            if (directSibling && directSibling.classList.contains('validation-message')) {
+                directSibling.remove();
+            }
+        }
+
+        setupInputValidation('.rate-input', {
+            tooltipTitle: () => '请输入0-100之间的整数值',
+            regexReplace: /[^0-9]/g,
+            validator: function(el) {
+                hideEditValidationMessage(el);
+                if (!el.value.trim() && el.hasAttribute('required')) { // Check for required but empty
+                    showEditValidationMessage(el, '此字段不能为空。');
+                    return;
+                }
+                const val = parseInt(el.value);
+                if (el.value && (isNaN(val) || val < 0 || val > 100)) {
+                    const correctedValue = Math.min(100, Math.max(0, val || 0));
+                    el.value = isNaN(correctedValue) ? '' : correctedValue.toString();
+                    if (isNaN(val) || val < 0) showEditValidationMessage(el, '值不能小于0');
+                    else if (val > 100) showEditValidationMessage(el, '值不能大于100');
+                } else if (el.value && isNaN(val)) { // Handles cases like "abc"
+                     showEditValidationMessage(el, '请输入有效的整数。');
+                }
+            }
+        });
+
+        setupInputValidation('.score-input', {
+            tooltipTitle: () => '请输入0-100之间的数值，最多一位小数',
+            initialFormat: val => parseFloat(val).toFixed(1),
+            regexReplace: /[^0-9.]/g,
+            formatOnInput: function(val) {
+                const parts = val.split('.');
+                if (parts.length > 2) val = parts[0] + '.' + parts.slice(1).join('');
+                if (parts.length > 1 && parts[1].length > 1) val = parts[0] + '.' + parts[1].substring(0, 1);
+                return val;
+            },
+            formatOnBlur: val => parseFloat(val).toFixed(1),
+            validator: function(el) {
+                hideEditValidationMessage(el);
+                 if (!el.value.trim() && el.hasAttribute('required')) {
+                    showEditValidationMessage(el, '此字段不能为空。');
+                    return;
+                }
+                if (el.value && !isNaN(parseFloat(el.value))) {
+                    const numVal = parseFloat(el.value);
+                    if (numVal > 100) {
+                        el.value = '100.0';
+                        showEditValidationMessage(el, '值不能超过100');
+                    } else if (numVal < 0) {
+                        el.value = '0.0';
+                        showEditValidationMessage(el, '值不能小于0');
+                    }
+                } else if (el.value) { 
+                     showEditValidationMessage(el, '请输入有效的数值');
+                }
+            }
+        });
+        
+        setupInputValidation('.counter-input', {
+            tooltipTitle: (el) => `请输入0-${el.name === 'homework_completion_count' ? 20 : 10}之间的整数`,
+            regexReplace: /[^0-9]/g,
+            validator: function(el) {
+                hideEditValidationMessage(el);
+                if (!el.value.trim() && el.hasAttribute('required')) {
+                    showEditValidationMessage(el, '此字段不能为空。');
+                    return;
+                }
+                const isHomework = el.name === 'homework_completion_count';
+                const maxValue = isHomework ? 20 : 10;
+                const val = parseInt(el.value);
+                if (el.value && (isNaN(val) || val < 0 || val > maxValue)) {
+                    const correctedValue = Math.min(maxValue, Math.max(0, val || 0));
+                    el.value = isNaN(correctedValue) ? '' : correctedValue.toString();
+                    if (isNaN(val) || val < 0) showEditValidationMessage(el, '值不能小于0');
+                    else if (val > maxValue) showEditValidationMessage(el, `值不能大于${maxValue}`);
+                } else if (el.value && isNaN(val)) {
+                     showEditValidationMessage(el, '请输入有效的整数。');
+                }
+            }
+        });
+        
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                let formIsValid = true;
+                form.querySelectorAll('.rate-input, .score-input, .counter-input').forEach(input => {
+                    // Manually trigger validation for all relevant inputs before submit
+                    if(input.validator) input.validator(input); 
+                    else if (input.type === 'number' && input.hasAttribute('required') && !input.value.trim()) {
+                        showEditValidationMessage(input, '此字段不能为空。');
+                    }
+                    if(input.classList.contains('is-invalid')) formIsValid = false;
+                });
+
+                if (!form.checkValidity() || !formIsValid) { 
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const firstInvalid = form.querySelector(':invalid, .is-invalid');
+                    if (firstInvalid) {
+                        firstInvalid.focus();
+                        // Removed alert, relying on visual cues
+                    }
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    });
+</script>
+{% endblock %} 
