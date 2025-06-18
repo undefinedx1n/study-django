@@ -1,4 +1,4 @@
-# 学习者画像系统 (Learner Profile System)
+# 基于python的学生画像系统设计与实现 (Learner Profile System)
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Django](https://img.shields.io/badge/Django-3.2.25-green.svg)](https://www.djangoproject.com/)
@@ -15,6 +15,26 @@
 - **可视化数据展示**: 雷达图、统计图表等多种方式直观展示分析结果
 - **个性化推荐**: 根据学生画像提供针对性的学习建议和改进方案
 - **权限管理系统**: 支持学生和管理员两种角色，确保数据安全
+
+## 📸 项目截图
+
+### 系统登录界面
+![登录界面](images/login.png)
+
+### 管理员仪表板
+![管理员仪表板](images/admin-dashboard.png)
+
+### 学生画像雷达图
+![学生画像雷达图](images/radar-chart.png)
+
+### 聚类分析结果
+![聚类分析](images/cluster-analysis.png)
+
+### 数据录入界面
+![数据录入](images/data-input.png)
+
+### 学生仪表板
+![学生仪表板](images/student-dashboard.png)
 
 ## 🏗️ 技术架构
 
@@ -232,9 +252,9 @@ learner-profile-system/
 
 ## 📞 联系方式
 
-- 项目维护者: [Your Name]
-- 邮箱: [your.email@example.com]
-- 项目链接: [https://github.com/your-username/learner-profile-system]
+- 项目维护者: [Juice]
+- 邮箱: [undefinedx1n@outlook.com]
+- 项目链接: [https://github.com/undefinedx1n/study-django]
 
 ## 🙏 致谢
 
